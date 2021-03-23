@@ -1,13 +1,22 @@
 # function used to cut files
-shorten = function(df) {
-  return(df[1:100,])
+shorten = function(df, starting_col) {
+    var_of_rows_to_keep = sort(rowVars(as.matrix(df[,starting_col:ncol(df)])), decreasing=TRUE)
+    variance = rowVars(as.matrix(df[,starting_col:ncol(df)]))
+    index_of_rows_to_keep = match(var_of_rows_to_keep, variance)
+    df = df[(index_of_rows_to_keep[1:500]),]
+    df = df[!duplicated(df),]
+    return(df)
+}
+
+simplified_shorten = function(df){
+    return(df[1:500,])
 }
 
 # function used on kallisto data for summarizing transcripts at the gene level
-grouper = function(df){
+collapse_to_gene_sum = function(df){
   df = df %>%
     group_by(gene_id) %>%
-    summarise_at(colnames(df)[3:ncol(df)], mean, na.rm = TRUE)
+    summarise_at(colnames(df)[3:ncol(df)], sum, na.rm = TRUE)
   return(df)
 }
 
@@ -40,17 +49,17 @@ handle_file_outputs = function(report_name){
 make_plot = function(tb, data_t, report_name, context_name){
   data_t$batch = as_factor(data_t$batch)
   shapes = c(2,3,11,12)
-  colors = c(
-    "#a6611a",
-    "#018571",
-    "#c2a5cf",
-    "#d01c8b",
-    "#e66101"
-  )
+  # colors = c(
+  #   "#a6611a",
+  #   "#018571",
+  #   "#c2a5cf",
+  #   "#d01c8b",
+  #   "#e66101"
+  # )
   
   p = ggplot(tb, aes(x = PC1, y=PC2, color=data_t$histology, shape=data_t$batch)) +
     geom_point() +
-    scale_color_manual(values = colors) +
+    # scale_color_manual(values = colors) +
     scale_shape_manual(values = shapes) +
     labs(color = "Histology", shape = "batch") +
     theme_bw() 

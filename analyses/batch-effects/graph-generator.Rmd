@@ -1,27 +1,28 @@
-# Batch Effects Graphs Description
+---
+author: Nathan Mella
+date: March 22, 2021
+output: html_document
+params:
+  shorten: FALSE
+---
 
-This markdown file also exists as a jupyter notebook file for a cleaner version.
 # Library Import & Data Download
 
 #### Import the necessary libararies 
 
 
-```{R}
-library(tibble)
-library(tidyr)
-library(ggplot2)
-library(readr)
-library(dplyr)
+```{R get-libraries}
+library(tidyverse)
 library(BatchQC)
-library(forcats)
 library(sva)
 library(rprojroot)
+library(matrixStats)
 ```
 
 ####  Configure file paths & import functions
 
 
-```{R}
+```{R configure-directories}
 # Configure file paths
 root_dir = find_root(has_file("OpenPBTA-analysis.Rproj"))
 analysis_dir = file.path(root_dir, "analyses", "batch-effects")
@@ -30,7 +31,7 @@ functions = file.path(analysis_dir, "util", "functions.R")
 ```
 
 
-```{R}
+```{R load-functions}
 # Load functions from /util/function.R
 source(functions)
 ```
@@ -38,14 +39,14 @@ source(functions)
 #### Download the Data
 
 
-```{R}
+```{R download-covariate-data}
 # Download all covariate data which will be used to identify batches
 covariate_file = file.path(data_dir, "pbta-histologies.tsv")
 covariate = read_tsv(covariate_file, col_types = cols(molecular_subtype = "c"))
 ```
 
 
-```{R}
+```{R download-expression-data}
 # Download gene expression data
 dat_rsem_polya_file = file.path(data_dir, "pbta-gene-expression-rsem-tpm.polya.rds")
 dat_rsem_polya = readRDS(dat_rsem_polya_file)
@@ -66,21 +67,24 @@ dat_kallisto_polya <- readRDS(dat_kallisto_polya_file)
 ***This should not be run for a full analysis!***
 
 
-```{R}
+```{R shorten-data-files}
 # Shorten Data Files
-dat_rsem_polya = shorten(dat_rsem_polya)
-dat_rsem_stranded = shorten(dat_rsem_stranded)
-dat_kallisto_stranded = shorten(dat_kallisto_stranded)
-dat_kallisto_polya = shorten(dat_kallisto_polya)
+if (params$shorten){
+  dat_rsem_polya = shorten(dat_rsem_polya, starting_col = 2)
+  dat_rsem_stranded = shorten(dat_rsem_stranded, starting_col = 2)
+  dat_kallisto_stranded = shorten(dat_kallisto_stranded, starting_col = 3)
+  dat_kallisto_polya = shorten(dat_kallisto_polya, starting_col = 3)
+}
+
 ```
 
 #### Group the Kallisto Data
 
 
-```{R}
+```{R summarize-kallisto-data}
 # Summarize the kallisto data on the gene level in order to join with batch
-dat_kallisto_polya = grouper(dat_kallisto_polya)
-dat_kallisto_stranded = grouper(dat_kallisto_stranded)
+dat_kallisto_polya = collapse_to_gene_sum(dat_kallisto_polya)
+dat_kallisto_stranded = collapse_to_gene_sum(dat_kallisto_stranded)
 ```
 
 # Sequence Center Batch effects
@@ -92,12 +96,12 @@ dat_kallisto_stranded = grouper(dat_kallisto_stranded)
 ##### Prepare Data
 
 
-```{R}
+```{R make-id-batch-for-rsem-polyA}
 id_batch_histology = make_id_batch_histology(covariate, "seq_center")
 ```
 
 
-```{R}
+```{R load-graphs-1}
 my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya, 
                                                id_batch_histology, 
                                                gene_id = dat_rsem_polya$gene_id, 
@@ -108,7 +112,7 @@ my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya,
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-pca-before-correction-1}
 my_rsem_polya_plots[1]
 ```
 
@@ -119,7 +123,7 @@ my_rsem_polya_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-pca-after-correction-1}
 my_rsem_polya_plots[2]
 ```
 
@@ -131,25 +135,25 @@ my_rsem_polya_plots[2]
 ##### Prepare Data 
 
 
-```{R}
+```{R load-graphs-2}
 my_rsem_stranded_plots = make_histology_pca_plots(dat_rsem_stranded, id_batch_histology, gene_id = dat_rsem_stranded$gene_id, report_name = "rsem_stranded_sequence", "pbta-gene-expression-rsem-tpm-combat-seq-center.stranded.rds")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-correction-2}
 my_rsem_stranded_plots[1]
 ```
 
 - File = "pbta-gene-expression-rsem-tpm.stranded.rds"
 - Batch = sequence center
-- Conclusion: **Cannot determine** from this image if there are batch effects. BatchQC is required (see script for batch-sequence-effects.R). Visually it appears that there are none.
+- Conclusion: **There are batch effects** from this image if there are batch effects. BatchQC is required (see script for batch-sequence-effects.R). Visually it appears that there are none.
 
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-correction-2}
 my_rsem_stranded_plots[2]
 ```
 
@@ -162,14 +166,14 @@ my_rsem_stranded_plots[2]
 ##### Prepare Data
 
 
-```{R}
+```{R load-graphs-3}
 my_kallisto_polya_plots = make_histology_pca_plots(dat_kallisto_polya, id_batch_histology, gene_id = dat_kallisto_polya$gene_id, report_name = "kallisto_polya_sequence", "pbta-gene-expression-kallisto-combat-seq-center.polya.rds")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-3}
 my_kallisto_polya_plots[1]
 ```
 
@@ -180,7 +184,7 @@ my_kallisto_polya_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-4}
 my_kallisto_polya_plots[2]
 ```
 
@@ -191,14 +195,14 @@ my_kallisto_polya_plots[2]
 ##### Prepare Data
 
 
-```{R}
+```{R load-graphs-5}
 my_kallisto_standed_plots = make_histology_pca_plots(dat_kallisto_stranded, id_batch_histology, gene_id = dat_kallisto_stranded$gene_id, report_name = "kallisto_stranded_sequence", "pbta-gene-expression-kallisto-combat-seq-center.stranded.rds")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-5}
 
 my_kallisto_standed_plots[1]
 ```
@@ -210,7 +214,7 @@ my_kallisto_standed_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-5}
 my_kallisto_standed_plots[2]
 ```
 
@@ -225,12 +229,12 @@ my_kallisto_standed_plots[2]
 ##### Prepare Data
 
 
-```{R}
+```{R make-id-batch-for-cohort}
 id_batch_histology = make_id_batch_histology(covariate, "cohort")
 ```
 
 
-```{R}
+```{R load-graphs-6}
 my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya, 
                                                id_batch_histology, 
                                                gene_id = dat_rsem_polya$gene_id, 
@@ -241,7 +245,7 @@ my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya,
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-6}
 my_rsem_polya_plots[1]
 ```
 
@@ -253,7 +257,7 @@ my_rsem_polya_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-6}
 my_rsem_polya_plots[2]
 ```
 
@@ -265,7 +269,7 @@ my_rsem_polya_plots[2]
 ##### Prepare Data (there is only one batch so this shouldn't work)
 
 
-```{R}
+```{R load-graphs-7}
 my_rsem_stranded_plots_temp = make_histology_pca_plots(dat_rsem_stranded, id_batch_histology, gene_id = dat_rsem_stranded$gene_id, report_name = "rsem_stranded_cohort", "pbta-gene-expression-rsem-tpm-combat-cohort.stranded.rds")
 ```
 
@@ -274,7 +278,7 @@ my_rsem_stranded_plots_temp = make_histology_pca_plots(dat_rsem_stranded, id_bat
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-7}
 my_rsem_stranded_plots_temp[1]
 ```
 
@@ -285,7 +289,7 @@ my_rsem_stranded_plots_temp[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-7}
 my_rsem_stranded_plots_temp[2]
 ```
 
@@ -298,14 +302,14 @@ my_rsem_stranded_plots_temp[2]
 ##### Prepare Data
 
 
-```{R}
+```{R load-graphs-8}
 my_kallisto_polya_plots = make_histology_pca_plots(dat_kallisto_polya, id_batch_histology, gene_id = dat_kallisto_polya$gene_id, report_name = "kallisto_polya_cohort", "pbta-gene-expression-kallisto-combat-cohort.polya.rds")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-8}
 my_kallisto_polya_plots[1]
 ```
 
@@ -317,7 +321,7 @@ my_kallisto_polya_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-8}
 my_kallisto_polya_plots[2]
 ```
 
@@ -328,14 +332,14 @@ my_kallisto_polya_plots[2]
 ##### Prepare Data
 
 
-```{R}
+```{R load-graphs-9}
 my_kallisto_standed_plots = make_histology_pca_plots(dat_kallisto_stranded, id_batch_histology, gene_id = dat_kallisto_stranded$gene_id, report_name = "kallisto_stranded_cohort", "pbta-gene-expression-kallisto-combat-cohort.stranded.rds")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-9}
 
 my_kallisto_standed_plots[1]
 ```
@@ -345,7 +349,7 @@ my_kallisto_standed_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-10}
 my_kallisto_standed_plots[2]
 ```
 
@@ -357,22 +361,40 @@ my_kallisto_standed_plots[2]
 
 ##### Prepare Data
 
+```{R re-shorten-files}
+if (params$shorten){
+  dat_rsem_polya = readRDS(dat_rsem_polya_file)
+  dat_rsem_stranded = readRDS(dat_rsem_stranded_file)
+  dat_kallisto_stranded <- readRDS(dat_kallisto_stranded_file)
+  dat_kallisto_stranded = dat_kallisto_stranded[,2:ncol(dat_kallisto_stranded)]
+  dat_kallisto_polya <- readRDS(dat_kallisto_polya_file)
+  
+  dat_rsem_polya = simplified_shorten(dat_rsem_polya)
+  dat_rsem_stranded = simplified_shorten(dat_rsem_stranded)
+  dat_kallisto_stranded = simplified_shorten(dat_kallisto_stranded)
+  dat_kallisto_polya = simplified_shorten(dat_kallisto_polya)
+  
+  dat_kallisto_polya = collapse_to_gene_sum(dat_kallisto_polya)
+  dat_kallisto_stranded = collapse_to_gene_sum(dat_kallisto_stranded)
+}
+```
+The step above is necessary because the same genes need to exist in both files
 
-```{R}
+```{R make-id-histology-for-method}
 id_histology = cbind("Kids_First_Biospecimen_ID" = covariate$Kids_First_Biospecimen_ID, "histology" = covariate$short_histology)
 colnames(id_histology) <- c("Kids_First_Biospecimen_ID", "histology")
 id_histology = as_tibble(id_histology)
 ```
 
 
-```{R}
+```{R load-graphs-11}
 my_rsem_plots = make_histology_pca_plots_methods(dat_rsem_polya, dat_rsem_stranded, id_histology, report_name = "rsem_method")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-11}
 my_rsem_plots[1]
 ```
 
@@ -383,7 +405,7 @@ my_rsem_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-11}
 my_rsem_plots[2]
 ```
 
@@ -398,14 +420,14 @@ my_rsem_plots[2]
 ##### Prepare Data
 
 
-```{R}
+```{R load-graphs-12}
 my_kallisto_plots = make_histology_pca_plots_methods(dat_kallisto_polya, dat_kallisto_stranded, id_histology, report_name = "kallisto_method")
 ```
 
 ##### Graph before adjusting for batch effects
 
 
-```{R}
+```{R display-before-12}
 my_kallisto_plots[1]
 ```
 
@@ -416,7 +438,7 @@ my_kallisto_plots[1]
 ##### Show batch effects after adjustment via [combat](https://rdrr.io/bioc/sva/man/ComBat.html)
 
 
-```{R}
+```{R display-after-12}
 my_kallisto_plots[2]
 ```
 
