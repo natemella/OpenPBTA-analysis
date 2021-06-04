@@ -172,7 +172,7 @@ make_before_and_after_combat_plots = function(data_t, batch, report_name, run_co
     poly2matrix <- log2(poly1matrix + 1)
     
     
-    combat_matrix = ComBat(counts=poly2matrix, batch=batch)
+    combat_matrix = ComBat(dat=poly2matrix, batch=batch)
     
     pca = prcomp(t(combat_matrix))
     
@@ -313,7 +313,7 @@ run_batchQC_and_combat = function(data_t, output_dir, report_name, file_name, ru
   if (run_combat == TRUE){
     print("RUNNING COMBAT")
     
-    combat_matrix = ComBat(counts=poly1matrix, batch=batch)
+    combat_matrix = ComBat(dat=poly1matrix, batch=batch)
     
     # run batchQC to see if ComBat successfully removed batch effects
     batchQC(combat_matrix, batch=batch,
