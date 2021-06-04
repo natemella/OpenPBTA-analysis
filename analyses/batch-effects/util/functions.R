@@ -49,17 +49,12 @@ handle_file_outputs = function(report_name){
 make_plot = function(tb, data_t, report_name, context_name){
   data_t$batch = as_factor(data_t$batch)
   shapes = c(2,3,11,12)
-  # colors = c(
-  #   "#a6611a",
-  #   "#018571",
-  #   "#c2a5cf",
-  #   "#d01c8b",
-  #   "#e66101"
-  # )
+  colors = c("#a6611a", "#018571", "#dfc27d", "#80cdc1")
   
   p = ggplot(tb, aes(x = PC1, y=PC2, color=data_t$histology, shape=data_t$batch)) +
     geom_point() +
-    # scale_color_manual(values = colors) +
+#     scale_color_brewer(palette="Spectral") +
+    scale_color_manual(values = colors) +
     scale_shape_manual(values = shapes) +
     labs(color = "Histology", shape = "batch") +
     theme_bw() 
@@ -149,12 +144,12 @@ make_id_batch_histology = function(covariate, batch_column){
   return(id_batch_histology)
 }
 
-# make two PCA plots before and after applying combat
+# make two PCA plots before and after applying Combat
 make_before_and_after_combat_plots = function(data_t, batch, report_name, run_combat) {
   
   data_t$batch = batch_prep(data_t)
   
-  #make a matrix representing just the gene expression data (this gets plugged into combat)
+  #make a matrix representing just the gene expression data (this gets plugged into Combat)
   poly1matrix = t(data_t[,4:ncol(data_t)])
   
   pca = prcomp(log2(data_t[,4:ncol(data_t)]+ 1))
@@ -177,7 +172,7 @@ make_before_and_after_combat_plots = function(data_t, batch, report_name, run_co
     poly2matrix <- log2(poly1matrix + 1)
     
     
-    combat_matrix = ComBat(dat=poly2matrix, batch=batch)
+    combat_matrix = Combat(counts=poly2matrix, batch=batch)
     
     pca = prcomp(t(combat_matrix))
     
@@ -186,8 +181,8 @@ make_before_and_after_combat_plots = function(data_t, batch, report_name, run_co
     p2 = make_plot(tb, data_t, report_name, "batch-adjusted-histology.png")
     return(list(p1, p2, data_t))
   }, error=function(cond){
-    message("ComBat failed! It's likely that you are trying to adjust for batches with just 1 batch")
-    # message(cond)
+    message("Combat failed! It's likely that you are trying to adjust for batches with just 1 batch")
+    message(cond)
     return(list(p1, NULL, data_t))
   })
   
@@ -228,7 +223,7 @@ make_histology_pca_plots = function(df, id_batch_histology, gene_id, report_name
 
 }
 
-# root functions that calls sub functions to combat and batchQC looking for batch affects
+# root functions that calls sub functions to Combat and batchQC looking for batch affects
 run_batchQC = function(df, id_batch, gene_id, report_name, file_name, run_combat){
   
   # create output directory (if necessary)
@@ -238,7 +233,7 @@ run_batchQC = function(df, id_batch, gene_id, report_name, file_name, run_combat
   # clean the data see tible_combat_prep comments
   data_t = tibble_combat_prep(df, gene_id, id_batch)
   
-  # run batchQC, save results, then run combat and save results
+  # run batchQC, save results, then run Combat and save results
   run_batchQC_and_combat(data_t, output_dir, report_name, file_name, run_combat)
   
 }
@@ -287,7 +282,7 @@ run_batchQC_polyA_vs_stranded = function(df_polya, df_stranded, report_name, fil
   
 }
 
-# root functions that calls sub functions to combat and batchQC looking for batch affects
+# root functions that calls sub functions to Combat and batchQC looking for batch affects
 run_batchQC_and_combat = function(data_t, output_dir, report_name, file_name, run_combat = TRUE) {
   
   # set up batcb vector
@@ -318,9 +313,9 @@ run_batchQC_and_combat = function(data_t, output_dir, report_name, file_name, ru
   if (run_combat == TRUE){
     print("RUNNING COMBAT")
     
-    combat_matrix = ComBat(dat=poly1matrix, batch=batch)
+    combat_matrix = Combat(counts=poly1matrix, batch=batch)
     
-    # run batchQC to see if combat successfully removed batch effects
+    # run batchQC to see if Combat successfully removed batch effects
     batchQC(combat_matrix, batch=batch,
             report_file=paste("combat", report_name, sep="_"), report_dir=output_dir,
             report_option_binary="100001000",
