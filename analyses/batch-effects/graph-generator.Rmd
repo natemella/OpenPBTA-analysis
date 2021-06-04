@@ -11,7 +11,7 @@ params:
 #### Import the necessary libararies 
 
 
-```{R get-libraries}
+```{R, message=FALSE, get-libraries}
 library(tidyverse)
 library(BatchQC)
 library(sva)
@@ -99,12 +99,12 @@ dat_kallisto_stranded = collapse_to_gene_sum(dat_kallisto_stranded)
 ##### Prepare Data
 
 
-```{R make-id-batch-for-rsem-polyA}
+```{R, make-id-batch-for-rsem-polyA}
 id_batch_histology = make_id_batch_histology(covariate, "seq_center")
 ```
 
 
-```{R load-graphs-1}
+```{R, results=FALSE, echo=TRUE, message=FALSE, load-graphs-1}
 my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya, 
                                                id_batch_histology, 
                                                gene_id = dat_rsem_polya$gene_id, 
@@ -138,7 +138,7 @@ my_rsem_polya_plots[2]
 ##### Prepare Data 
 
 
-```{R load-graphs-2}
+```{R, results=FALSE, echo=TRUE, message=FALSE, load-graphs-2}
 my_rsem_stranded_plots = make_histology_pca_plots(dat_rsem_stranded, id_batch_histology, gene_id = dat_rsem_stranded$gene_id, report_name = "rsem_stranded_sequence", "pbta-gene-expression-rsem-tpm-combat-seq-center.stranded.rds")
 ```
 
@@ -169,7 +169,7 @@ my_rsem_stranded_plots[2]
 ##### Prepare Data
 
 
-```{R load-graphs-3}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-3}
 my_kallisto_polya_plots = make_histology_pca_plots(dat_kallisto_polya, id_batch_histology, gene_id = dat_kallisto_polya$gene_id, report_name = "kallisto_polya_sequence", "pbta-gene-expression-kallisto-combat-seq-center.polya.rds")
 ```
 
@@ -198,7 +198,7 @@ my_kallisto_polya_plots[2]
 ##### Prepare Data
 
 
-```{R load-graphs-5}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-5}
 my_kallisto_standed_plots = make_histology_pca_plots(dat_kallisto_stranded, id_batch_histology, gene_id = dat_kallisto_stranded$gene_id, report_name = "kallisto_stranded_sequence", "pbta-gene-expression-kallisto-combat-seq-center.stranded.rds")
 ```
 
@@ -232,12 +232,12 @@ my_kallisto_standed_plots[2]
 ##### Prepare Data
 
 
-```{R make-id-batch-for-cohort}
+```{R, label='make-id-batch-for-cohort'}
 id_batch_histology = make_id_batch_histology(covariate, "cohort")
 ```
 
 
-```{R load-graphs-6}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-6}
 my_rsem_polya_plots = make_histology_pca_plots(dat_rsem_polya, 
                                                id_batch_histology, 
                                                gene_id = dat_rsem_polya$gene_id, 
@@ -272,7 +272,7 @@ my_rsem_polya_plots[2]
 ##### Prepare Data (there is only one batch so this shouldn't work)
 
 
-```{R load-graphs-7}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-7}
 my_rsem_stranded_plots_temp = make_histology_pca_plots(dat_rsem_stranded, id_batch_histology, gene_id = dat_rsem_stranded$gene_id, report_name = "rsem_stranded_cohort", "pbta-gene-expression-rsem-tpm-combat-cohort.stranded.rds")
 ```
 
@@ -305,7 +305,7 @@ my_rsem_stranded_plots_temp[2]
 ##### Prepare Data
 
 
-```{R load-graphs-8}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-8}
 my_kallisto_polya_plots = make_histology_pca_plots(dat_kallisto_polya, id_batch_histology, gene_id = dat_kallisto_polya$gene_id, report_name = "kallisto_polya_cohort", "pbta-gene-expression-kallisto-combat-cohort.polya.rds")
 ```
 
@@ -335,7 +335,7 @@ my_kallisto_polya_plots[2]
 ##### Prepare Data
 
 
-```{R load-graphs-9}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-9}
 my_kallisto_standed_plots = make_histology_pca_plots(dat_kallisto_stranded, id_batch_histology, gene_id = dat_kallisto_stranded$gene_id, report_name = "kallisto_stranded_cohort", "pbta-gene-expression-kallisto-combat-cohort.stranded.rds")
 ```
 
@@ -390,7 +390,7 @@ id_histology = as_tibble(id_histology)
 ```
 
 
-```{R load-graphs-11}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-11}
 my_rsem_plots = make_histology_pca_plots_methods(dat_rsem_polya, dat_rsem_stranded, id_histology, report_name = "rsem_method")
 ```
 
@@ -423,7 +423,7 @@ my_rsem_plots[2]
 ##### Prepare Data
 
 
-```{R load-graphs-12}
+```{R, results = FALSE, echo=TRUE, message=FALSE, load-graphs-12}
 my_kallisto_plots = make_histology_pca_plots_methods(dat_kallisto_polya, dat_kallisto_stranded, id_histology, report_name = "kallisto_method")
 ```
 

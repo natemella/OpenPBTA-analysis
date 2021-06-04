@@ -152,10 +152,12 @@ make_before_and_after_combat_plots = function(data_t, batch, report_name, run_co
   #make a matrix representing just the gene expression data (this gets plugged into ComBat)
   poly1matrix = t(data_t[,4:ncol(data_t)])
   
+  
+  print("BEFORE PCA")
   pca = prcomp(log2(data_t[,4:ncol(data_t)]+ 1))
   
   tb = as_tibble(pca$x)
-  
+  print("AFTER PCA")
   p1 = make_plot(tb, data_t, report_name, "histology.png")
   
   if (run_combat == FALSE){
@@ -170,8 +172,7 @@ make_before_and_after_combat_plots = function(data_t, batch, report_name, run_co
     print(sum(var_zero_genes))
     
     poly2matrix <- log2(poly1matrix + 1)
-    
-    
+
     combat_matrix = ComBat(dat=poly2matrix, batch=batch)
     
     pca = prcomp(t(combat_matrix))
